@@ -13,8 +13,8 @@ st_autorefresh(interval=60 * 1000, key='datarefresh')
 exchange = ccxt.binance({
     'options': {'defaultType': 'future'},
     'proxies': {
-        'http': 'http://57.129.81.201:8080',
-        'https': 'http://57.129.81.201:8080'
+        'http': 'http://78.47.127.91:80',
+        'https': 'http://78.47.127.91:80'
     },
     'enableRateLimit': True
 })
@@ -91,6 +91,10 @@ with st.spinner('Scanning ~200 symbols...'):
 
 if 'df' in st.session_state:
     df = st.session_state['df']
+    
+    if df.empty:
+        st.error("No data fetched for any symbols. This could be due to proxy failure, API restrictions, or rate limits. Try a different proxy from the list and redeploy. Check app logs for details.")
+        st.stop()  # Halt execution to prevent KeyError
 
     # Filters/Alerts in sidebar
     st.sidebar.header('Filters/Alerts')
