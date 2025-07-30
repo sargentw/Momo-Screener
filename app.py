@@ -13,15 +13,15 @@ st_autorefresh(interval=60 * 1000, key='datarefresh')
 exchange = ccxt.binance({
     'options': {'defaultType': 'future'},
     'proxies': {
-        'http': 'http://78.47.127.91:80',
-        'https': 'http://78.47.127.91:80'
+        'http': 'http://37.120.162.180:42824',
+        'https': 'http://37.120.162.180:42824'
     },
     'enableRateLimit': True
 })
 
-# Load perp USDT futures symbols
+# Load perp USDT futures symbols (limit to 20 for testing; remove [:20] for full ~200)
 markets = exchange.load_markets()
-symbols = [m['symbol'] for m in markets.values() if m.get('perp') and m['quote'] == 'USDT']
+symbols = [m['symbol'] for m in markets.values() if m.get('perp') and m['quote'] == 'USDT'][:20]
 
 # Function to fetch and compute data for a symbol (4 hours = 240 x 1m candles)
 @st.cache_data(ttl=60)  # Cache for 1 minute
@@ -82,19 +82,23 @@ def get_symbol_data(symbol, num_1m_candles_4h=240, num_1m_candles_1h=60):
 # Streamlit UI
 st.title('Binance Perp Futures Screener (1m Candles, Auto-Updates Every Minute)')
 
-# Scan and aggregate data (runs automatically on refresh)
-with st.spinner('Scanning ~200 symbols...'):
-    data = [get_symbol_data(s) for s in symbols]
-    data = [d for d in data if d]  # Filter None
-    df = pd.DataFrame(data)
-    st.session_state['df'] = df
+# Scan and aggregate data with progress bar
+st.subheader('Scanning symbols...')
+progress_bar = st.progress(0)
+data = []
+for i, s in enumerate(symbols):
+    data.append(get_symbol_data(s))
+    progress_bar.progress((i + 1) / len(symbols))
+data = [d for d in data if d]  # Filter None
+df = pd.DataFrame(data)
+st.session_state['df'] = df
 
 if 'df' in st.session_state:
     df = st.session_state['df']
     
     if df.empty:
         st.error("No data fetched for any symbols. This could be due to proxy failure, API restrictions, or rate limits. Try a different proxy from the list and redeploy. Check app logs for details.")
-        st.stop()  # Halt execution to prevent KeyError
+        st.stop()  # Halt execution to prevent errors
 
     # Filters/Alerts in sidebar
     st.sidebar.header('Filters/Alerts')
