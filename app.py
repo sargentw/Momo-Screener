@@ -9,8 +9,15 @@ from streamlit_autorefresh import st_autorefresh
 # Auto-refresh every 60 seconds (1 minute)
 st_autorefresh(interval=60 * 1000, key='datarefresh')
 
-# Initialize Binance futures exchange
-exchange = ccxt.binance({'options': {'defaultType': 'future'}})
+# Initialize Binance futures exchange with proxy and rate limiting
+exchange = ccxt.binance({
+    'options': {'defaultType': 'future'},
+    'proxies': {
+        'http': 'http://57.129.81.201:8080',
+        'https': 'http://57.129.81.201:8080'
+    },
+    'enableRateLimit': True
+})
 
 # Load perp USDT futures symbols
 markets = exchange.load_markets()
