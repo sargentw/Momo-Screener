@@ -148,4 +148,8 @@ if 'df' in st.session_state:
                 yaxis_title='Price',
                 yaxis2=dict(title='Volume', overlaying='y', side='right'),
                 yaxis3=dict(title='OI', overlaying='y', side='left', anchor='free', position=0.05),
-                xaxis_ranges
+                xaxis_rangeslider_visible=True
+            )
+            st.plotly_chart(fig)
+else:
+    st.info('Scanning in progress...')
