@@ -19,9 +19,9 @@ exchange = ccxt.binance({
     'enableRateLimit': True
 })
 
-# Load perp USDT futures symbols (limit to 20 for testing; remove [:20] for full ~200)
+# Load perp USDT futures symbols
 markets = exchange.load_markets()
-symbols = [m['symbol'] for m in markets.values() if m.get('perp') and m['quote'] == 'USDT'][:20]
+symbols = [m['symbol'] for m in markets.values() if m.get('perp') and m['quote'] == 'USDT']
 
 # Function to fetch and compute data for a symbol (4 hours = 240 x 1m candles)
 @st.cache_data(ttl=60)  # Cache for 1 minute
@@ -83,7 +83,7 @@ def get_symbol_data(symbol, num_1m_candles_4h=240, num_1m_candles_1h=60):
 st.title('Binance Perp Futures Screener (1m Candles, Auto-Updates Every Minute)')
 
 # Scan and aggregate data with progress bar
-st.subheader('Scanning symbols...')
+st.subheader('Scanning ~200 symbols... This may take a few minutes due to API limits.')
 progress_bar = st.progress(0)
 data = []
 for i, s in enumerate(symbols):
