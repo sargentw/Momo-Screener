@@ -4,20 +4,20 @@ import numpy as np
 from scipy import stats
 import streamlit as st
 import plotly.graph_objects as go
-from streamlit_autorefresh import st_autorefresh
 import time
 
-# Auto-refresh every 60 seconds (1 minute)
-st_autorefresh(interval=60 * 1000, key='datarefresh')
-
-# Initialize Binance USDT futures exchange with rate limiting (no proxy needed on European servers)
+# Initialize Binance USDT futures exchange with proxy and rate limiting
 exchange = ccxt.binanceusdm({
+    'proxies': {
+        'http': 'http://57.129.81.201:8080',
+        'https': 'http://57.129.81.201:8080'
+    },
     'enableRateLimit': True
 })
 
-# Load perp USDT futures symbols (limit to 20 for testing; remove [:20] for full ~200)
+# Load perp USDT futures symbols (limit to 10 for testing; remove [:10] for full ~200)
 markets = exchange.load_markets()
-symbols = [m['symbol'] for m in markets.values() if m.get('perp')][:20]
+symbols = [m['symbol'] for m in markets.values() if m.get('perp')][:10]
 
 # Function to fetch and compute data for a symbol (4 hours = 240 x 1m candles)
 @st.cache_data(ttl=60)  # Cache for 1 minute
@@ -76,25 +76,26 @@ def get_symbol_data(symbol, num_1m_candles_4h=240, num_1m_candles_1h=60):
         return None  # Skip symbols with errors
 
 # Streamlit UI
-st.title('Binance Perp Futures Screener (1m Candles, Auto-Updates Every Minute)')
+st.title('Binance Perp Futures Screener (1m Candles, Updates on Refresh)')
 
-# Scan and aggregate data with progress bar
-st.subheader('Scanning symbols...')
-progress_bar = st.progress(0)
-data = []
-for i, s in enumerate(symbols):
-    data.append(get_symbol_data(s))
-    progress_bar.progress((i + 1) / len(symbols))
-    time.sleep(1)  # Short delay to avoid any rate limits
-data = [d for d in data if d]  # Filter None
-df = pd.DataFrame(data)
-st.session_state['df'] = df
+if st.button('Refresh Data'):
+    # Scan and aggregate data with progress bar
+    st.subheader('Scanning symbols...')
+    progress_bar = st.progress(0)
+    data = []
+    for i, s in enumerate(symbols):
+        data.append(get_symbol_data(s))
+        progress_bar.progress((i + 1) / len(symbols))
+        time.sleep(1)  # Short delay to avoid any rate limits
+    data = [d for d in data if d]  # Filter None
+    df = pd.DataFrame(data)
+    st.session_state['df'] = df
 
 if 'df' in st.session_state:
     df = st.session_state['df']
     
     if df.empty:
-        st.error("No data fetched for any symbols. This could be due to API restrictions or rate limits. Check app logs for details.")
+        st.error("No data fetched for any symbols. This could be due to proxy failure, API restrictions, or rate limits. Try a different proxy from the list and redeploy. Check app logs for details.")
         st.stop()  # Halt execution to prevent errors
 
     # Filters/Alerts in sidebar
@@ -149,4 +150,4 @@ if 'df' in st.session_state:
             )
             st.plotly_chart(fig)
 else:
-    st.info('Scanning in progress...')
+    st.info('Click "Refresh Data" to start scanning.')
