@@ -6,17 +6,9 @@ import streamlit as st
 import plotly.graph_objects as go
 import time
 
-# Load secrets for Bitget API (add in Streamlit Cloud settings)
-API_KEY = st.secrets.get('API_KEY', 'YOUR_API_KEY_HERE')  # Fallback for local testing
-API_SECRET = st.secrets.get('API_SECRET', 'YOUR_API_SECRET_HERE')
-API_PASSPHRASE = st.secrets.get('API_PASSPHRASE', 'YOUR_PASSPHRASE_HERE')
-
-# Initialize Bitget futures exchange with API key and passphrase
+# Initialize Bitget futures exchange (public for OHLCV and OI)
 exchange = ccxt.bitget({
-    'options': {'defaultType': 'future'},
-    'apiKey': API_KEY,
-    'secret': API_SECRET,
-    'password': API_PASSPHRASE,
+    'options': {'defaultType': 'swap'},
     'enableRateLimit': True
 })
 
@@ -101,7 +93,7 @@ if 'df' in st.session_state:
     df = st.session_state['df']
     
     if df.empty:
-        st.error("No data fetched. Check if API key, secret, and passphrase are correct in secrets or try refreshing. Check logs for details.")
+        st.error("No data fetched. Check logs for details or try a different exchange.")
         st.stop()  # Halt execution to prevent errors
 
     # Filters/Alerts in sidebar
