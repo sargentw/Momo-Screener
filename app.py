@@ -18,9 +18,9 @@ exchange = ccxt.bitget({
     'enableRateLimit': True
 })
 
-# Load perp USDT futures symbols (limit to 20 for testing; remove [:20] for full)
+# Load perp USDT futures symbols (limit to 10 for testing; change to [:] for full)
 markets = exchange.load_markets()
-symbols = [m['symbol'] for m in markets.values() if m.get('perp') and m['quote'] == 'USDT'][:20]
+symbols = [m['symbol'] for m in markets.values() if m.get('perp') and m['quote'] == 'USDT'][:10]
 
 # Function to fetch and compute data for a symbol (4 hours = 240 x 1m candles)
 @st.cache_data(ttl=60)  # Cache for 1 minute
