@@ -5,23 +5,23 @@ from scipy import stats
 import streamlit as st
 import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
+import time
 
 # Auto-refresh every 60 seconds (1 minute)
 st_autorefresh(interval=60 * 1000, key='datarefresh')
 
-# Initialize Binance futures exchange with proxy and rate limiting
-exchange = ccxt.binance({
-    'options': {'defaultType': 'future'},
+# Initialize Binance USDT futures exchange with proxy and rate limiting
+exchange = ccxt.binanceusdm({
     'proxies': {
-        'http': 'http://27.79.187.155:16000',
-        'https': 'http://27.79.187.155:16000'
+        'http': 'http://161.35.70.249:8080',
+        'https': 'http://161.35.70.249:8080'
     },
     'enableRateLimit': True
 })
 
-# Load perp USDT futures symbols
+# Load perp USDT futures symbols (limit to 20 for testing; remove [:20] for full ~200)
 markets = exchange.load_markets()
-symbols = [m['symbol'] for m in markets.values() if m.get('perp') and m['quote'] == 'USDT']
+symbols = [m['symbol'] for m in markets.values() if m.get('perp')][:20]
 
 # Function to fetch and compute data for a symbol (4 hours = 240 x 1m candles)
 @st.cache_data(ttl=60)  # Cache for 1 minute
@@ -83,12 +83,13 @@ def get_symbol_data(symbol, num_1m_candles_4h=240, num_1m_candles_1h=60):
 st.title('Binance Perp Futures Screener (1m Candles, Auto-Updates Every Minute)')
 
 # Scan and aggregate data with progress bar
-st.subheader('Scanning ~200 symbols... This may take a few minutes due to API limits.')
+st.subheader('Scanning symbols...')
 progress_bar = st.progress(0)
 data = []
 for i, s in enumerate(symbols):
     data.append(get_symbol_data(s))
     progress_bar.progress((i + 1) / len(symbols))
+    time.sleep(1)  # Short delay to avoid any rate limits
 data = [d for d in data if d]  # Filter None
 df = pd.DataFrame(data)
 st.session_state['df'] = df
