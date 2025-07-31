@@ -10,12 +10,8 @@ import time
 # Auto-refresh every 60 seconds (1 minute)
 st_autorefresh(interval=60 * 1000, key='datarefresh')
 
-# Initialize Binance USDT futures exchange with proxy and rate limiting
+# Initialize Binance USDT futures exchange with rate limiting (no proxy needed on European servers)
 exchange = ccxt.binanceusdm({
-    'proxies': {
-        'http': 'http://161.35.70.249:8080',
-        'https': 'http://161.35.70.249:8080'
-    },
     'enableRateLimit': True
 })
 
@@ -98,7 +94,7 @@ if 'df' in st.session_state:
     df = st.session_state['df']
     
     if df.empty:
-        st.error("No data fetched for any symbols. This could be due to proxy failure, API restrictions, or rate limits. Try a different proxy from the list and redeploy. Check app logs for details.")
+        st.error("No data fetched for any symbols. This could be due to API restrictions or rate limits. Check app logs for details.")
         st.stop()  # Halt execution to prevent errors
 
     # Filters/Alerts in sidebar
