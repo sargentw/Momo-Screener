@@ -76,6 +76,7 @@ def get_symbol_data(symbol, num_1m_candles_4h=240, num_1m_candles_1h=60):
 
         return agg_data
     except Exception as e:
+        st.write(f"Error fetching data for {symbol}: {str(e)}")  # Display error for debugging
         return None  # Skip symbols with errors
 
 # Streamlit UI
